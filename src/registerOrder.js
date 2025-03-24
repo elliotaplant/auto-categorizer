@@ -1,13 +1,27 @@
 // Function to extract order details from email
-function extractOrderDetails(emailText) {
-  // Extract product name - look for patterns like "Amazon Basics Stapler..." in the example
-  const productNameRegex = /(\".*?\"|'.*?'|\*\s.*?(?:\n|$))/;
-  const productNameMatch = emailText.match(productNameRegex);
+export function extractOrderDetails(emailText) {
+  // Extract product name - look for patterns including:
+  // - Text in quotes (e.g., "Amazon Basics Stapler")
+  // - Text after "Ordered:" in the subject line
+  // - Text after "Item:" or similar product identifiers
+  const productNamePatterns = [
+    /(\".*?\")/,                                 // Text in quotes
+    /Subject:.*?Ordered:\s*(\".*?\")/i,          // Ordered: "Product" in subject
+    /Item:\s*(.*?)(?:\n|$)/i,                    // Item: Product
+    /Ordered:\s*(.*?)(?:\n|$)/i,                 // Ordered: Product
+    /for\s+\"(.*?)\".*?has shipped/i,            // "Your order for "X" has shipped" pattern
+  ];
+  
   let productName = "Unknown Product";
-
-  if (productNameMatch) {
-    // Clean up the product name (remove quotes, asterisks, etc.)
-    productName = productNameMatch[0].replace(/[\"\'*]/g, "").trim();
+  
+  // Try each pattern until we find a match
+  for (const pattern of productNamePatterns) {
+    const match = emailText.match(pattern);
+    if (match && match[1]) {
+      // Clean up the product name (remove quotes, asterisks, etc.)
+      productName = match[1].replace(/[\"\'*]/g, "").trim();
+      if (productName && productName !== "") break;
+    }
   }
 
   // Extract price - look for dollar amounts

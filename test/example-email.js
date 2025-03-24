@@ -1,4 +1,4 @@
-Delivered-To: elliotaplant@gmail.com
+export const EXAMPLE_EMAIL = `Delivered-To: elliotaplant@gmail.com
 Received: by 2002:a05:6358:3211:b0:1dc:b09f:ae0b with SMTP id a17csp5432740rwe;
         Mon, 24 Mar 2025 06:54:08 -0700 (PDT)
 X-Google-Smtp-Source: AGHT+IEaoGwknmq8SWBP5/LF6dWDnwDAfpdsSvgGvaZ7nJBQyOVQ5Zrp2kipGnfuoRpXlEBGQ2eL
@@ -1284,4 +1284,4 @@ amazon.com/gp/r.html?C=3D3E92MSAD2LHAU&K=3D1NG4SOUTCDRLG&M=3Durn:rtn:msg:20=
 tps%3A%2F%2Fimages-na.ssl-images-amazon.com%2Fimages%2FG%2F01%2Fnav%2Ftrans=
 p.gif&H=3DMTZCAGARTUZQOKFXA2GNNC4QVMIA&ref_=3Dpe_125775000_1044873430_open"=
  /></body></html>
-------=_Part_3028565_434066593.1742824447991--
+------=_Part_3028565_434066593.1742824447991--`;
