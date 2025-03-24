@@ -83,7 +83,7 @@ async function updateTransactionMemo(ynabApi, transactionId, memo) {
 }
 
 // Main function to process all unapproved Amazon transactions
-export async function addMemos(ynabApi) {
+export async function addMemos(ynabApi, env) {
   try {
     console.log("Starting to process unapproved Amazon transactions...");
 
@@ -99,19 +99,31 @@ export async function addMemos(ynabApi) {
 
     // Process each Amazon transaction
     for (const txn of amazonTransactions) {
-      // Convert milliunits to dollars (absolute value for comparison)
-      const txnAmount = Math.abs(txn.amount / 1000);
+      // Convert milliunits to cents (absolute value for comparison)
+      // YNAB stores amounts in milliunits (1/1000 of a currency unit)
+      // e.g., $10.00 = 10000 milliunits
+      const txnAmountCents = Math.round(Math.abs(txn.amount / 10));
 
+      // For logging, convert cents to dollars
+      const txnAmountDollars = txnAmountCents / 100;
       console.log(
-        `Processing transaction: $${txnAmount.toFixed(2)} on ${txn.date}`
+        `Processing transaction: $${txnAmountDollars.toFixed(2)} on ${txn.date}`
       );
 
-      // Find matching orders in the database
-      const matchingOrders = []; // TODO: load from DB
+      // Find matching orders in the database by price in cents
+      let matchingOrders = [];
+      if (env && env.DB) {
+        const result = await env.DB.prepare(
+          "SELECT * FROM amazon_orders WHERE price_cents = ? AND used = 0"
+        )
+          .bind(txnAmountCents)
+          .all();
+        matchingOrders = result.results;
+      }
 
       if (matchingOrders.length === 0) {
         console.log(
-          `No matching Amazon orders found for $${txnAmount.toFixed(2)}`
+          `No matching Amazon orders found for $${txnAmountDollars.toFixed(2)}`
         );
         continue;
       }
@@ -124,15 +136,22 @@ export async function addMemos(ynabApi) {
         newMemo = matchingOrders[0].productName;
 
         // Mark the order as used
-        // TODO: implement
-        await markOrderAsUsed(matchingOrders[0].id);
+        if (env && env.DB) {
+          await env.DB.prepare("UPDATE amazon_orders SET used = 1 WHERE id = ?")
+            .bind(matchingOrders[0].id)
+            .run();
+        }
       } else {
         // Multiple matches - list all product names
         newMemo = matchingOrders.map((order) => order.productName).join(" OR ");
 
         // Mark all orders as used
-        for (const order of matchingOrders) {
-          await markOrderAsUsed(order.id);
+        if (env && env.DB) {
+          for (const order of matchingOrders) {
+            await env.DB.prepare("UPDATE amazon_orders SET used = 1 WHERE id = ?")
+              .bind(order.id)
+              .run();
+          }
         }
       }
 

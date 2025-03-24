@@ -28,9 +28,12 @@ export function extractOrderDetails(emailText) {
   const priceRegex = /(\d+\.\d{2})\s*USD/;
   const priceMatch = emailText.match(priceRegex);
   let price = 0;
+  let priceCents = 0;
 
   if (priceMatch) {
     price = parseFloat(priceMatch[1]);
+    // Convert to cents for storage (rounded to nearest cent)
+    priceCents = Math.round(price * 100);
   }
 
   // Extract order ID - format like 123-4567890-1234567
@@ -47,13 +50,14 @@ export function extractOrderDetails(emailText) {
 
   return {
     productName,
-    price,
+    price,          // Keep original price for display
+    priceCents,     // Price in cents for storage and comparison
     orderId,
     date,
   };
 }
 
-export async function registerOrder(emailText) {
+export async function registerOrder(emailText, env) {
   try {
     // Extract order details
     const orderDetails = extractOrderDetails(emailText);
@@ -73,25 +77,37 @@ export async function registerOrder(emailText) {
       return new Response("Invalid order details", { status: 200 });
     }
 
-    // In production, store in D1 database
-    // Example D1 query if we were using D1:
-    /*
-    await env.DB.prepare(
-      "INSERT INTO amazon_orders (product_name, price, order_id, date, used) VALUES (?, ?, ?, ?, ?)"
-    )
-      .bind(
-        orderDetails.productName,
-        orderDetails.price,
-        orderDetails.orderId,
-        orderDetails.date,
-        0  // not used yet
-      )
-      .run();
-    */
+    // Store in D1 database if env is provided (production)
+    if (env && env.DB) {
+      try {
+        const result = await env.DB.prepare(
+          "INSERT INTO amazon_orders (product_name, price_cents, order_id, date, used) VALUES (?, ?, ?, ?, ?)"
+        )
+          .bind(
+            orderDetails.productName,
+            orderDetails.priceCents,
+            orderDetails.orderId,
+            orderDetails.date,
+            0  // not used yet
+          )
+          .run();
+        
+        console.log("Order stored in database, ID:", result.meta.last_row_id);
+      } catch (dbError) {
+        // Handle database errors separately
+        if (dbError.message && dbError.message.includes("UNIQUE constraint failed")) {
+          console.log(`Order ${orderDetails.orderId} already exists in database, skipping`);
+        } else {
+          console.error("Database error:", dbError);
+          throw dbError; // Re-throw to be caught by the outer catch
+        }
+      }
+    } else {
+      // For development/testing without database
+      console.log("DB not available, order would be stored in database");
+    }
 
-    // For now, just log that we would store it
     console.log("Order registered successfully");
-
     return new Response("Order processed successfully", { status: 200 });
   } catch (error) {
     console.error("Error processing email:", error);
