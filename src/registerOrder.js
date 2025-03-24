@@ -1,64 +1,67 @@
 // Function to extract order details from email
 function extractOrderDetails(emailText) {
-	// Extract product name - look for patterns like "Amazon Basics Stapler..." in the example
-	const productNameRegex = /(\".*?\"|'.*?'|\*\s.*?(?:\n|$))/;
-	const productNameMatch = emailText.match(productNameRegex);
-	let productName = 'Unknown Product';
+  // Extract product name - look for patterns like "Amazon Basics Stapler..." in the example
+  const productNameRegex = /(\".*?\"|'.*?'|\*\s.*?(?:\n|$))/;
+  const productNameMatch = emailText.match(productNameRegex);
+  let productName = "Unknown Product";
 
-	if (productNameMatch) {
-		// Clean up the product name (remove quotes, asterisks, etc.)
-		productName = productNameMatch[0].replace(/[\"\'*]/g, '').trim();
-	}
+  if (productNameMatch) {
+    // Clean up the product name (remove quotes, asterisks, etc.)
+    productName = productNameMatch[0].replace(/[\"\'*]/g, "").trim();
+  }
 
-	// Extract price - look for dollar amounts
-	const priceRegex = /(\d+\.\d{2})\s*USD/;
-	const priceMatch = emailText.match(priceRegex);
-	let price = 0;
+  // Extract price - look for dollar amounts
+  const priceRegex = /(\d+\.\d{2})\s*USD/;
+  const priceMatch = emailText.match(priceRegex);
+  let price = 0;
 
-	if (priceMatch) {
-		price = parseFloat(priceMatch[1]);
-	}
+  if (priceMatch) {
+    price = parseFloat(priceMatch[1]);
+  }
 
-	// Extract order ID - format like 123-4567890-1234567
-	const orderIdRegex = /Order\s+#?\s*(\d+-\d+-\d+)/i;
-	const orderIdMatch = emailText.match(orderIdRegex);
-	let orderId = 'unknown-order-id';
+  // Extract order ID - format like 123-4567890-1234567
+  const orderIdRegex = /Order\s+#?\s*(\d+-\d+-\d+)/i;
+  const orderIdMatch = emailText.match(orderIdRegex);
+  let orderId = "unknown-order-id";
 
-	if (orderIdMatch) {
-		orderId = orderIdMatch[1];
-	}
+  if (orderIdMatch) {
+    orderId = orderIdMatch[1];
+  }
 
-	// Extract order date (using email date, not ideal but workable for demo)
-	const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  // Extract order date (using email date, not ideal but workable for demo)
+  const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-	return {
-		productName,
-		price,
-		orderId,
-		date,
-	};
+  return {
+    productName,
+    price,
+    orderId,
+    date,
+  };
 }
 
 export async function registerOrder(emailText) {
-	try {
-		// Extract order details
-		const orderDetails = extractOrderDetails(emailText);
+  try {
+    // Extract order details
+    const orderDetails = extractOrderDetails(emailText);
 
-		console.log('Extracted order details:');
-		console.log('- Product:', orderDetails.productName);
-		console.log('- Price:', orderDetails.price);
-		console.log('- Order ID:', orderDetails.orderId);
-		console.log('- Date:', orderDetails.date);
+    console.log("Extracted order details:");
+    console.log("- Product:", orderDetails.productName);
+    console.log("- Price:", orderDetails.price);
+    console.log("- Order ID:", orderDetails.orderId);
+    console.log("- Date:", orderDetails.date);
 
-		// Validate extracted data
-		if (orderDetails.price <= 0 || orderDetails.productName === 'Unknown Product') {
-			console.log('Could not extract valid order details, ignoring');
-			return new Response('Invalid order details', { status: 200 });
-		}
+    // Validate extracted data
+    if (
+      orderDetails.price <= 0 ||
+      orderDetails.productName === "Unknown Product"
+    ) {
+      console.log("Could not extract valid order details, ignoring");
+      return new Response("Invalid order details", { status: 200 });
+    }
 
-		// In production, store in D1 database
-		// Example D1 query if we were using D1:
-		/*
+    // In production, store in D1 database
+    // Example D1 query if we were using D1:
+    /*
     await env.DB.prepare(
       "INSERT INTO amazon_orders (product_name, price, order_id, date, used) VALUES (?, ?, ?, ?, ?)"
     )
@@ -72,14 +75,14 @@ export async function registerOrder(emailText) {
       .run();
     */
 
-		// For now, just log that we would store it
-		console.log('Order registered successfully');
+    // For now, just log that we would store it
+    console.log("Order registered successfully");
 
-		return new Response('Order processed successfully', { status: 200 });
-	} catch (error) {
-		console.error('Error processing email:', error);
-		return new Response('Error processing email: ' + error.message, {
-			status: 500,
-		});
-	}
+    return new Response("Order processed successfully", { status: 200 });
+  } catch (error) {
+    console.error("Error processing email:", error);
+    return new Response("Error processing email: " + error.message, {
+      status: 500,
+    });
+  }
 }
