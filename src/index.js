@@ -6,25 +6,25 @@ import { registerOrder } from "./registerOrder";
 async function readStreamToString(stream) {
   const reader = stream.getReader();
   const chunks = [];
-  
+
   // Read all chunks from the stream
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     chunks.push(value);
   }
-  
+
   // Concatenate chunks and decode as text
   const allChunks = new Uint8Array(
     chunks.reduce((acc, chunk) => acc + chunk.length, 0)
   );
-  
+
   let position = 0;
   for (const chunk of chunks) {
     allChunks.set(chunk, position);
     position += chunk.length;
   }
-  
+
   const decoder = new TextDecoder();
   return decoder.decode(allChunks);
 }
@@ -93,17 +93,17 @@ export default {
     try {
       // Get email text content by reading the stream
       const emailText = await readStreamToString(message.raw);
-      
+
       // Log a snippet of the email for debugging
       console.log("Email preview (first 500 chars):");
       console.log(emailText.substring(0, 500));
       console.log("... [truncated] ...");
-      
+
       // Log the full email content for complete example
       console.log("FULL EMAIL CONTENT START");
       console.log(emailText);
       console.log("FULL EMAIL CONTENT END");
-      
+
       // Process the email
       await registerOrder(emailText, env);
     } catch (error) {

@@ -148,7 +148,9 @@ export async function addMemos(ynabApi, env) {
         // Mark all orders as used
         if (env && env.DB) {
           for (const order of matchingOrders) {
-            await env.DB.prepare("UPDATE amazon_orders SET used = 1 WHERE id = ?")
+            await env.DB.prepare(
+              "UPDATE amazon_orders SET used = 1 WHERE id = ?"
+            )
               .bind(order.id)
               .run();
           }
