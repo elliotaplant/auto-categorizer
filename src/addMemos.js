@@ -1,27 +1,25 @@
 // Script to update YNAB transaction memos with Amazon product names
-import { config } from "dotenv";
 import * as ynab from "ynab";
-config();
 
-// Get the personal access token from env
-const token = process.env.YNAB_PERSONAL_ACCESS_TOKEN;
-const budgetId = process.env.BUDGET_ID;
+export function getYnab(env) {
+  // Get the personal access token from env
+  const token = env.YNAB_PERSONAL_ACCESS_TOKEN;
+  const budgetId = env.BUDGET_ID;
 
-if (!token) {
-  console.error("YNAB_PERSONAL_ACCESS_TOKEN is required in .env file");
-  process.exit(1);
+  if (!token) {
+    throw new Error("YNAB_PERSONAL_ACCESS_TOKEN is required in environment");
+  }
+
+  if (!budgetId) {
+    throw new Error("BUDGET_ID is required in environment");
+  }
+
+  // Initialize YNAB API client
+  return new ynab.API(token);
 }
-
-if (!budgetId) {
-  console.error("BUDGET_ID is required in .env file");
-  process.exit(1);
-}
-
-// Initialize YNAB API client
-const ynabAPI = new ynab.API(token);
 
 // Get unapproved transactions
-async function getUnapprovedTransactions() {
+async function getUnapprovedTransactions(ynabApi) {
   try {
     const response = await ynabAPI.transactions.getTransactions(
       budgetId,
@@ -48,7 +46,7 @@ function findAmazonTransactionsWithoutMemos(transactions) {
 }
 
 // Update transaction memo
-async function updateTransactionMemo(transactionId, memo) {
+async function updateTransactionMemo(ynabApi, transactionId, memo) {
   try {
     const txnResponse = await ynabAPI.transactions.getTransactionById(
       budgetId,
@@ -85,12 +83,12 @@ async function updateTransactionMemo(transactionId, memo) {
 }
 
 // Main function to process all unapproved Amazon transactions
-export async function addMemos() {
+export async function addMemos(ynabApi) {
   try {
     console.log("Starting to process unapproved Amazon transactions...");
 
     // Get all unapproved transactions
-    const transactions = await getUnapprovedTransactions();
+    const transactions = await getUnapprovedTransactions(ynabApi);
     console.log(`Found ${transactions.length} unapproved transactions total`);
 
     // Filter for Amazon transactions without memos
@@ -140,7 +138,7 @@ export async function addMemos() {
 
       // Update the transaction memo
       console.log(`Updating transaction memo to: "${newMemo}"`);
-      await updateTransactionMemo(txn.id, newMemo);
+      await updateTransactionMemo(ynabApi, txn.id, newMemo);
       console.log("Transaction updated successfully");
     }
 

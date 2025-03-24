@@ -1,10 +1,11 @@
+import { getYnab } from "./addMemos";
 import { addMemos } from "./addMemos";
 import { registerOrder } from "./registerOrder";
 
 export default {
   async scheduled(controller, env, ctx) {
     console.log("Cron triggered");
-    await addMemos();
+    await addMemos(getYnab(env));
   },
 
   async fetch() {
