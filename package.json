@@ -7,7 +7,9 @@
     "dev": "wrangler dev",
     "start": "wrangler dev",
     "test": "vitest",
-    "wrangler": "wrangler"
+    "wrangler": "wrangler",
+    "test-api": "node scripts/test-api.js",
+    "clear-orders": "wrangler d1 execute auto-categorizer-db --command=\"DELETE FROM amazon_orders\" --remote"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.7.5",
