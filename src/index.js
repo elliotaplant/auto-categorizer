@@ -32,7 +32,8 @@ async function readStreamToString(stream) {
 export default {
   async scheduled(controller, env, ctx) {
     console.log("Cron triggered");
-    await addMemos(getYnab(env), env);
+    const updatedCount = await addMemos(getYnab(env), env);
+    console.log(`Added ${updatedCount} memos successfully`);
   },
 
   async fetch(request, env, ctx) {
@@ -54,7 +55,7 @@ export default {
       try {
         // Trigger adding memos to YNAB transactions
         const updatedCount = await addMemos(getYnab(env), env);
-        return new Response(`Added ${updatedCount} successfully`, {
+        return new Response(`Added ${updatedCount} memos successfully`, {
           status: 200,
         });
       } catch (error) {
