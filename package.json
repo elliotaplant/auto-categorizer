@@ -8,7 +8,8 @@
     "start": "wrangler dev",
     "test": "vitest",
     "wrangler": "wrangler",
-    "clear-orders": "wrangler d1 execute auto-categorizer-db --command=\"DELETE FROM amazon_orders\" --remote"
+    "clear-orders": "wrangler d1 execute auto-categorizer-db --command=\"DELETE FROM amazon_orders\" --remote",
+    "get-orders": "wrangler d1 execute auto-categorizer-db --command=\"SELECT * FROM amazon_orders;\" --remote"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.7.5",

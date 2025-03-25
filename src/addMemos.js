@@ -99,7 +99,8 @@ export async function addMemos(ynabApi, env) {
 
     // Filter for Amazon transactions without memos
     const amazonTransactions = transactions.filter((txn) => {
-      txn.payee_name?.toLowerCase().includes("amazon") && !txn?.memo?.trim();
+      txn.import_payee_name_original?.toLowerCase().includes("amazon") &&
+        !txn?.memo?.trim();
     });
     console.log(
       `Found ${amazonTransactions.length} unapproved Amazon transactions without memos`
@@ -110,9 +111,9 @@ export async function addMemos(ynabApi, env) {
       "SELECT * FROM amazon_orders WHERE used = 0"
     ).all();
     const unusedOrders = result.results;
-    
+
     console.log(`Found ${unusedOrders.length} unused orders in database`);
-    
+
     // Process each Amazon transaction
     for (const txn of amazonTransactions) {
       // Convert milliunits to cents (absolute value for comparison)
@@ -127,7 +128,9 @@ export async function addMemos(ynabApi, env) {
       );
 
       // Find matching orders by price in memory
-      const matchingOrders = unusedOrders.filter(order => order.price_cents === txnAmountCents);
+      const matchingOrders = unusedOrders.filter(
+        (order) => order.price_cents === txnAmountCents
+      );
 
       if (matchingOrders.length === 0) {
         console.log(
@@ -137,7 +140,7 @@ export async function addMemos(ynabApi, env) {
       }
 
       console.log(`Found ${matchingOrders.length} matching order(s)`);
-      
+
       // Debug the order object
       console.log("First matching order:", matchingOrders[0]);
 
@@ -152,13 +155,13 @@ export async function addMemos(ynabApi, env) {
           .run();
       } else {
         // Multiple matches - list all product names
-        newMemo = matchingOrders.map((order) => order.product_name).join(" OR ");
+        newMemo = matchingOrders
+          .map((order) => order.product_name)
+          .join(" OR ");
 
         // Mark all orders as used
         for (const order of matchingOrders) {
-          await env.DB.prepare(
-            "UPDATE amazon_orders SET used = 1 WHERE id = ?"
-          )
+          await env.DB.prepare("UPDATE amazon_orders SET used = 1 WHERE id = ?")
             .bind(order.id)
             .run();
         }

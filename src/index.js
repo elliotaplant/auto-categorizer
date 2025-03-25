@@ -60,23 +60,17 @@ export default {
           status: 500,
         });
       }
-    } else if (request.method === "GET" && path === "/api/orders") {
+    } else if (request.method === "POST" && path === "/api/get-transactions") {
       try {
-        // List all orders from the database
-        if (!env.DB) {
-          return new Response("Database not available", { status: 503 });
-        }
-
-        const { results } = await env.DB.prepare(
-          "SELECT * FROM amazon_orders ORDER BY created_at DESC"
-        ).all();
-
-        return new Response(JSON.stringify({ orders: results }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
+        // Trigger adding memos to YNAB transactions
+        const response = await getYnab(env).transactions.getTransactions(
+          env.BUDGET_ID,
+          undefined,
+          "unapproved"
+        );
+        return new Response(JSON.stringify(response.data), { status: 200 });
       } catch (error) {
-        return new Response("Error fetching orders: " + error.message, {
+        return new Response("Error getting transactions: " + error.message, {
           status: 500,
         });
       }
