@@ -16,7 +16,7 @@ export function extractOrderDetails(emailText) {
     /Amazon Basics.*?(?:\n|$)/i, // Any line containing "Amazon Basics"
   ];
 
-  let productName = "Unknown Product";
+  let productName = "";
 
   // Try each pattern until we find a match
   for (const pattern of productNamePatterns) {
@@ -28,13 +28,8 @@ export function extractOrderDetails(emailText) {
     }
   }
 
-  // For the specific test email - hardcode the product name to match expected output
-  if (
-    emailText.includes("Amazon Basics Stapler with 1000 Staples") ||
-    emailText.includes("Amazon Basics Stapler with 1000 S")
-  ) {
-    productName =
-      "Amazon Basics Stapler with 1000 Staples, Office Stapler, 25 Sheet Capacity, Non-Slip, Black";
+  if (!productName) {
+    throw new Error("Could not find product name");
   }
 
   // Extract price and price in cents
@@ -42,45 +37,34 @@ export function extractOrderDetails(emailText) {
   let priceCents = 0;
 
   // For the specific test email - hardcode to match expected output
-  if (
-    emailText.includes("Amazon Basics Stapler with 1000 Staples") ||
-    emailText.includes("Amazon Basics Stapler with 1000 S")
-  ) {
-    price = 6.76;
-    priceCents = 676;
-  } else {
-    // Use a single regex to extract the total price
-    const totalPriceRegex = /Total\s+\$(\d+\.?\d*)/i; // Match "Total $X.XX"
-    const priceMatch = emailText.match(totalPriceRegex);
+  // Use a single regex to extract the total price
+  const totalPriceRegex = /Total\s+\$(\d+\.?\d*)/i; // Match "Total $X.XX"
+  const priceMatch = emailText.match(totalPriceRegex);
 
-    if (priceMatch && priceMatch[1]) {
-      price = parseFloat(priceMatch[1]);
-      // Convert to cents for storage (rounded to nearest cent)
-      priceCents = Math.round(price * 100);
-    }
+  if (priceMatch && priceMatch[1]) {
+    price = parseFloat(priceMatch[1]);
+    // Convert to cents for storage (rounded to nearest cent)
+    priceCents = Math.round(price * 100);
+  }
+
+  if (!price) {
+    throw new Error("Could not find price");
   }
 
   // Extract order ID - format like 123-4567890-1234567
-  let orderId = "unknown-order-id";
+  let orderId = "";
 
-  // For the specific test email - hardcode the order ID to match expected output
-  if (
-    emailText.includes("Amazon Basics Stapler with 1000 Staples") ||
-    emailText.includes("Amazon Basics Stapler with 1000 S")
-  ) {
-    orderId = "113-9615736-3549843"; // Hardcode for the test case
-  } else {
-    // Use a single regex for order ID extraction - fast fail approach
-    const orderIdRegex = /Order\s+#?\s*(\d+-\d+-\d+)/i;
-    const orderIdMatch = emailText.match(orderIdRegex);
+  // Use a single regex for order ID extraction - fast fail approach
+  const orderIdRegex = /Order\s+#?\s*(\d+-\d+-\d+)/i;
+  const orderIdMatch = emailText.match(orderIdRegex);
 
-    if (orderIdMatch) {
-      orderId = orderIdMatch[1];
-    }
+  if (orderIdMatch) {
+    orderId = orderIdMatch[1];
   }
 
-  // Extract order date (using email date, not ideal but workable for demo)
-  const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+  if (!orderId) {
+    throw new Error("Could not find order id");
+  }
 
   return {
     productName,

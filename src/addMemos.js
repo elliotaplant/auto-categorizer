@@ -19,9 +19,9 @@ export function getYnab(env) {
 }
 
 // Get unapproved transactions
-async function getUnapprovedTransactions(ynabApi) {
+async function getUnapprovedTransactions(ynabApi, budgetId) {
   try {
-    const response = await ynabAPI.transactions.getTransactions(
+    const response = await ynabApi.transactions.getTransactions(
       budgetId,
       undefined,
       "unapproved"
@@ -46,9 +46,9 @@ function findAmazonTransactionsWithoutMemos(transactions) {
 }
 
 // Update transaction memo
-async function updateTransactionMemo(ynabApi, transactionId, memo) {
+async function updateTransactionMemo(ynabApi, transactionId, memo, budgetId) {
   try {
-    const txnResponse = await ynabAPI.transactions.getTransactionById(
+    const txnResponse = await ynabApi.transactions.getTransactionById(
       budgetId,
       transactionId
     );
@@ -66,7 +66,7 @@ async function updateTransactionMemo(ynabApi, transactionId, memo) {
       approved: currentTxn.approved,
     };
 
-    const response = await ynabAPI.transactions.updateTransaction(
+    const response = await ynabApi.transactions.updateTransaction(
       budgetId,
       transactionId,
       { transaction: transactionUpdate }
@@ -86,9 +86,15 @@ async function updateTransactionMemo(ynabApi, transactionId, memo) {
 export async function addMemos(ynabApi, env) {
   try {
     console.log("Starting to process unapproved Amazon transactions...");
+    
+    // Get the budget ID from env
+    const budgetId = env.BUDGET_ID;
+    if (!budgetId) {
+      throw new Error("BUDGET_ID is required in environment");
+    }
 
     // Get all unapproved transactions
-    const transactions = await getUnapprovedTransactions(ynabApi);
+    const transactions = await getUnapprovedTransactions(ynabApi, budgetId);
     console.log(`Found ${transactions.length} unapproved transactions total`);
 
     // Filter for Amazon transactions without memos
@@ -159,7 +165,7 @@ export async function addMemos(ynabApi, env) {
 
       // Update the transaction memo
       console.log(`Updating transaction memo to: "${newMemo}"`);
-      await updateTransactionMemo(ynabApi, txn.id, newMemo);
+      await updateTransactionMemo(ynabApi, txn.id, newMemo, budgetId);
       console.log("Transaction updated successfully");
     }
 

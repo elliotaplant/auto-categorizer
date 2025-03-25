@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS amazon_orders (
   product_name TEXT NOT NULL,
   price_cents INTEGER NOT NULL, -- Store price in cents to avoid floating point issues
   order_id TEXT NOT NULL,
-  date TEXT NOT NULL,
   used INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
