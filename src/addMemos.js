@@ -86,7 +86,7 @@ async function updateTransactionMemo(ynabApi, transactionId, memo, budgetId) {
 export async function addMemos(ynabApi, env) {
   try {
     console.log("Starting to process unapproved Amazon transactions...");
-    
+
     // Get the budget ID from env
     const budgetId = env.BUDGET_ID;
     if (!budgetId) {
@@ -98,11 +98,21 @@ export async function addMemos(ynabApi, env) {
     console.log(`Found ${transactions.length} unapproved transactions total`);
 
     // Filter for Amazon transactions without memos
-    const amazonTransactions = findAmazonTransactionsWithoutMemos(transactions);
+    const amazonTransactions = transactions.filter((txn) => {
+      txn.payee_name?.toLowerCase().includes("amazon") && !txn?.memo?.trim();
+    });
     console.log(
       `Found ${amazonTransactions.length} unapproved Amazon transactions without memos`
     );
 
+    // Fetch all unused orders first
+    const result = await env.DB.prepare(
+      "SELECT * FROM amazon_orders WHERE used = 0"
+    ).all();
+    const unusedOrders = result.results;
+    
+    console.log(`Found ${unusedOrders.length} unused orders in database`);
+    
     // Process each Amazon transaction
     for (const txn of amazonTransactions) {
       // Convert milliunits to cents (absolute value for comparison)
@@ -116,16 +126,8 @@ export async function addMemos(ynabApi, env) {
         `Processing transaction: $${txnAmountDollars.toFixed(2)} on ${txn.date}`
       );
 
-      // Find matching orders in the database by price in cents
-      let matchingOrders = [];
-      if (env && env.DB) {
-        const result = await env.DB.prepare(
-          "SELECT * FROM amazon_orders WHERE price_cents = ? AND used = 0"
-        )
-          .bind(txnAmountCents)
-          .all();
-        matchingOrders = result.results;
-      }
+      // Find matching orders by price in memory
+      const matchingOrders = unusedOrders.filter(order => order.price_cents === txnAmountCents);
 
       if (matchingOrders.length === 0) {
         console.log(
@@ -135,31 +137,30 @@ export async function addMemos(ynabApi, env) {
       }
 
       console.log(`Found ${matchingOrders.length} matching order(s)`);
+      
+      // Debug the order object
+      console.log("First matching order:", matchingOrders[0]);
 
       let newMemo = "";
       if (matchingOrders.length === 1) {
         // Exactly one match - use the product name
-        newMemo = matchingOrders[0].productName;
+        newMemo = matchingOrders[0].product_name;
 
         // Mark the order as used
-        if (env && env.DB) {
-          await env.DB.prepare("UPDATE amazon_orders SET used = 1 WHERE id = ?")
-            .bind(matchingOrders[0].id)
-            .run();
-        }
+        await env.DB.prepare("UPDATE amazon_orders SET used = 1 WHERE id = ?")
+          .bind(matchingOrders[0].id)
+          .run();
       } else {
         // Multiple matches - list all product names
-        newMemo = matchingOrders.map((order) => order.productName).join(" OR ");
+        newMemo = matchingOrders.map((order) => order.product_name).join(" OR ");
 
         // Mark all orders as used
-        if (env && env.DB) {
-          for (const order of matchingOrders) {
-            await env.DB.prepare(
-              "UPDATE amazon_orders SET used = 1 WHERE id = ?"
-            )
-              .bind(order.id)
-              .run();
-          }
+        for (const order of matchingOrders) {
+          await env.DB.prepare(
+            "UPDATE amazon_orders SET used = 1 WHERE id = ?"
+          )
+            .bind(order.id)
+            .run();
         }
       }
 
