@@ -99,8 +99,10 @@ export async function addMemos(ynabApi, env) {
 
     // Filter for Amazon transactions without memos
     const amazonTransactions = transactions.filter((txn) => {
-      txn.import_payee_name_original?.toLowerCase().includes("amazon") &&
-        !txn?.memo?.trim();
+      return (
+        txn.import_payee_name_original?.toLowerCase().includes("amazon") &&
+        !txn.memo?.trim()
+      );
     });
     console.log(
       `Found ${amazonTransactions.length} unapproved Amazon transactions without memos`
@@ -113,6 +115,8 @@ export async function addMemos(ynabApi, env) {
     const unusedOrders = result.results;
 
     console.log(`Found ${unusedOrders.length} unused orders in database`);
+
+    let updatedCount = 0;
 
     // Process each Amazon transaction
     for (const txn of amazonTransactions) {
@@ -140,6 +144,7 @@ export async function addMemos(ynabApi, env) {
       }
 
       console.log(`Found ${matchingOrders.length} matching order(s)`);
+      updatedCount++;
 
       // Debug the order object
       console.log("First matching order:", matchingOrders[0]);
@@ -174,6 +179,7 @@ export async function addMemos(ynabApi, env) {
     }
 
     console.log("\nFinished processing all transactions");
+    return updatedCount;
   } catch (error) {
     console.error("Error in main process:", error.message);
     throw error;

@@ -53,8 +53,10 @@ export default {
     } else if (request.method === "POST" && path === "/api/add-memos") {
       try {
         // Trigger adding memos to YNAB transactions
-        await addMemos(getYnab(env), env);
-        return new Response("Memos added successfully", { status: 200 });
+        const updatedCount = await addMemos(getYnab(env), env);
+        return new Response(`Added ${updatedCount} successfully`, {
+          status: 200,
+        });
       } catch (error) {
         return new Response("Error adding memos: " + error.message, {
           status: 500,
