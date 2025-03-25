@@ -70,8 +70,7 @@ export function extractOrderDetails(emailText) {
     productName,
     price, // Keep original price for display
     priceCents, // Price in cents for storage and comparison
-    orderId,
-    date,
+    orderId
   };
 }
 
@@ -84,7 +83,6 @@ export async function registerOrder(emailText, env) {
     console.log("- Product:", orderDetails.productName);
     console.log("- Price:", orderDetails.price);
     console.log("- Order ID:", orderDetails.orderId);
-    console.log("- Date:", orderDetails.date);
 
     // Validate extracted data
     if (
@@ -99,13 +97,12 @@ export async function registerOrder(emailText, env) {
     if (env && env.DB) {
       try {
         const result = await env.DB.prepare(
-          "INSERT INTO amazon_orders (product_name, price_cents, order_id, date, used) VALUES (?, ?, ?, ?, ?)"
+          "INSERT INTO amazon_orders (product_name, price_cents, order_id, used) VALUES (?, ?, ?, ?)"
         )
           .bind(
             orderDetails.productName,
             orderDetails.priceCents,
             orderDetails.orderId,
-            orderDetails.date,
             0 // not used yet
           )
           .run();

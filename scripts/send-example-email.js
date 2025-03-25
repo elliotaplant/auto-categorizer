@@ -1,6 +1,3 @@
-const fs = require("fs");
-const path = require("path");
-
 // Dynamically import the example email from your test file
 async function main() {
   try {
@@ -10,8 +7,7 @@ async function main() {
         "missing one of: productName, orderId, price. Those should be args"
       );
     }
-    const emailContent = exampleEmail();
-    if (Math.random() < 2) return;
+    const emailContent = exampleEmail(productName, orderId, price);
 
     // Send the email to your API endpoint
     console.log("Sending request to API...");
@@ -40,11 +36,11 @@ async function main() {
     console.log("Current Orders in Database:");
     console.log(JSON.stringify(ordersData, null, 2));
   } catch (error) {
-    console.error("Error:", error);
+    console.error(error);
   }
 }
 
-main();
+main().catch(console.error);
 
 function exampleEmail(productName, orderId, price) {
   console.log("{productName, orderId, price}", { productName, orderId, price });

@@ -8,7 +8,6 @@
     "start": "wrangler dev",
     "test": "vitest",
     "wrangler": "wrangler",
-    "send-example-email": "node scripts/send-example-email.js",
     "clear-orders": "wrangler d1 execute auto-categorizer-db --command=\"DELETE FROM amazon_orders\" --remote"
   },
   "devDependencies": {
