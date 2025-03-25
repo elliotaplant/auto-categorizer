@@ -20,7 +20,15 @@
       "database_name": "auto-categorizer-db",
       "database_id": "88f85737-ffba-4fa5-bfcd-420e9d1b20eb"
     }
-  ]
+  ],
+  
+  /**
+   * Cron Triggers
+   * Docs: https://developers.cloudflare.com/workers/configuration/cron-triggers
+   */
+  "triggers": {
+    "crons": ["*/30 * * * *"]
+  }
   
   /**
    * Smart Placement
