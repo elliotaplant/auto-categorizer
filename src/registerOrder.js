@@ -1,31 +1,15 @@
 // Function to extract order details from email
 export function extractOrderDetails(emailText) {
-  // Extract product name - look for patterns including:
-  // - Text in image tags (e.g., [image: Amazon Basics Stapler...])
-  // - Text in quotes (e.g., "Amazon Basics Stapler")
-  // - Text after "Ordered:" in the subject line
-  // - Text after "Item:" or similar product identifiers
-  const productNamePatterns = [
-    /\[image:\s*(.*?)(?:\]|\n)/i, // [image: Product]
-    /image:\s*(.*?)(?:\]|\n)/i, // image: Product
-    /(\".*?\")/, // Text in quotes
-    /Subject:.*?Ordered:\s*(\".*?\")/i, // Ordered: "Product" in subject
-    /Item:\s*(.*?)(?:\n|$)/i, // Item: Product
-    /Ordered:\s*(.*?)(?:\n|$)/i, // Ordered: Product
-    /for\s+\"(.*?)\".*?has shipped/i, // "Your order for "X" has shipped" pattern
-    /Amazon Basics.*?(?:\n|$)/i, // Any line containing "Amazon Basics"
-  ];
-
+  // Extract product name using a single regex pattern
+  // This looks for text in square brackets starting with "image:" which is common in HTML emails
+  const productNameRegex = /\[image:\s*(.*?)(?:\]|\n)/i;
+  const productNameMatch = emailText.match(productNameRegex);
+  
   let productName = "";
-
-  // Try each pattern until we find a match
-  for (const pattern of productNamePatterns) {
-    const match = emailText.match(pattern);
-    if (match && match[1]) {
-      // Clean up the product name (remove quotes, asterisks, etc.)
-      productName = match[1].replace(/[\"\'*]/g, "").trim();
-      if (productName && productName !== "") break;
-    }
+  
+  if (productNameMatch && productNameMatch[1]) {
+    // Clean up the product name
+    productName = productNameMatch[1].replace(/[\"\'*]/g, "").trim();
   }
 
   if (!productName) {
@@ -54,8 +38,8 @@ export function extractOrderDetails(emailText) {
   // Extract order ID - format like 123-4567890-1234567
   let orderId = "";
 
-  // Use a single regex for order ID extraction - fast fail approach
-  const orderIdRegex = /Order\s+#?\s*(\d+-\d+-\d+)/i;
+  // Single regex to match any 3-7-7 digit pattern that could be an order ID
+  const orderIdRegex = /(\d{3}-\d{7}-\d{7})/;
   const orderIdMatch = emailText.match(orderIdRegex);
 
   if (orderIdMatch) {

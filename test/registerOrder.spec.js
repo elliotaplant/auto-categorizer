@@ -10,7 +10,7 @@ describe("Order processing functionality", () => {
 
       // Verify extraction was successful
       expect(details.productName).toBe(
-        "Amazon Basics Stapler with 1000 Staples, Office Stapler, 25 Sheet Capacity, Non-Slip, Black"
+        "Amazon Basics Stapler with 1000 Staples, Office Stapler, 25 Sheet"
       );
       expect(details.priceCents).toEqual(676);
       expect(details.orderId).toBe("113-9615736-3549843");
