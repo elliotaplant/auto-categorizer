@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { extractOrderDetails, registerOrder } from "../src/registerOrder";
 import { EXAMPLE_EMAIL } from "./example-email";
-import { EXAMPLE_EMAIL_2 } from "./example-email-2";
+import { EXAMPLE_EMAIL_2 } from "./example-email-2.js";
 
 describe("Order processing functionality", () => {
   describe("extractOrderDetails", () => {
