@@ -6,7 +6,7 @@
     "deploy": "wrangler deploy",
     "dev": "wrangler dev",
     "start": "wrangler dev",
-    "test": "vitest",
+    "test": "vitest --no-watch",
     "wrangler": "wrangler",
     "clear-orders": "wrangler d1 execute auto-categorizer-db --command=\"DELETE FROM amazon_orders\" --remote",
     "get-orders": "wrangler d1 execute auto-categorizer-db --command=\"SELECT * FROM amazon_orders;\" --remote"
