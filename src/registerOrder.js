@@ -1,7 +1,7 @@
 // Function to extract order details from email
 export function extractOrderDetails(emailText) {
   // first, join all the lines of the email. Remove all =\n.
-  const joinedEmail = emailText.split("=\n").join("\n").split("\n").join(" ")
+  const joinedEmail = emailText.replace(/=\n/g, "").replace(/\n/g, " ")
 
   // Product name occurs in the first [image: (.+)] group
   const productName = joinedEmail.match(/\[image: (.+?)\]/)?.[1];
