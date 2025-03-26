@@ -5,8 +5,6 @@ export function extractOrderDetails(emailText) {
 
   // Product name occurs in the first [image: (.+)] group
   const productName = joinedEmail.match(/\[image: (.+?)\]/)?.[1];
-  console.log('productName', productName);
-
   if (!productName) {
     throw new Error("Could not find product name");
   }
@@ -42,17 +40,7 @@ export async function registerOrder(emailText, env) {
     console.log("- Price:", orderDetails.price);
     console.log("- Order ID:", orderDetails.orderId);
 
-    // Validate extracted data
-    if (
-      orderDetails.price <= 0 ||
-      orderDetails.productName === "Unknown Product"
-    ) {
-      console.log("Could not extract valid order details, ignoring");
-      return new Response("Invalid order details", { status: 200 });
-    }
-
     // Store in D1 database if env is provided (production)
-    if (env && env.DB) {
       try {
         const result = await env.DB.prepare(
           "INSERT INTO amazon_orders (product_name, price_cents, order_id, used) VALUES (?, ?, ?, ?)"
@@ -80,10 +68,6 @@ export async function registerOrder(emailText, env) {
           throw dbError; // Re-throw to be caught by the outer catch
         }
       }
-    } else {
-      // For development/testing without database
-      console.log("DB not available, order would be stored in database");
-    }
 
     console.log("Order registered successfully");
     return new Response("Order processed successfully", { status: 200 });
