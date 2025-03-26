@@ -1,51 +1,25 @@
 // Function to extract order details from email
 export function extractOrderDetails(emailText) {
-  // Extract product name using a single regex pattern
-  // This looks for text in square brackets starting with "image:" which is common in HTML emails
-  const productNameRegex = /\[image:\s*(.*?)(?:\]|\n)/i;
-  const productNameMatch = emailText.match(productNameRegex);
-  
-  let productName = "";
-  
-  if (productNameMatch && productNameMatch[1]) {
-    // Clean up the product name
-    productName = productNameMatch[1].replace(/[\"\'*]/g, "").trim();
-  }
+  // first, join all the lines of the email. Remove all =\n.
+  const joinedEmail = emailText.split("=\n").join("\n").split("\n").join(" ")
+
+  // Product name occurs in the first [image: (.+)] group
+  const productName = joinedEmail.match(/\[image: (.+?)\]/)?.[1];
+  console.log('productName', productName);
 
   if (!productName) {
     throw new Error("Could not find product name");
   }
 
-  // Extract price and price in cents
-  let price = 0;
-  let priceCents = 0;
-
-  // For the specific test email - hardcode to match expected output
-  // Use a single regex to extract the total price
-  const totalPriceRegex = /Total\s+\$(\d+\.?\d*)/i; // Match "Total $X.XX"
-  const priceMatch = emailText.match(totalPriceRegex);
-
-  if (priceMatch && priceMatch[1]) {
-    price = parseFloat(priceMatch[1]);
-    // Convert to cents for storage (rounded to nearest cent)
-    priceCents = Math.round(price * 100);
-  }
-
+  // Price appears in dollars
+  const price = joinedEmail.match(/Total \$([\d\.]+)/)?.[1]
   if (!price) {
     throw new Error("Could not find price");
   }
+  const priceCents = price * 100;
 
   // Extract order ID - format like 123-4567890-1234567
-  let orderId = "";
-
-  // Single regex to match any 3-7-7 digit pattern that could be an order ID
-  const orderIdRegex = /(\d{3}-\d{7}-\d{7})/;
-  const orderIdMatch = emailText.match(orderIdRegex);
-
-  if (orderIdMatch) {
-    orderId = orderIdMatch[1];
-  }
-
+  const orderId = joinedEmail.match(/Order # =E2=80=AB([\w\d-]+)/)?.[1]
   if (!orderId) {
     throw new Error("Could not find order id");
   }
